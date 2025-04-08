@@ -1,0 +1,85 @@
+import pygame
+import pymunk
+import pymunk.pygame_util
+
+pygame.init()
+screen = pygame.display.set_mode((800, 600))
+clock = pygame.time.Clock()
+running = True
+
+# Pymunk Space Setup
+space = pymunk.Space()
+space.gravity = (0, 900)
+draw_options = pymunk.pygame_util.DrawOptions(screen)
+
+# Load Images
+bird_image = pygame.image.load('bird.png')
+background_image = pygame.image.load('background.jpg')
+
+
+# Resize Images
+background_image = pygame.transform.scale(background_image, (800, 600))
+bird_image = pygame.transform.scale(bird_image, (40, 40))
+
+# Ground
+
+
+ground_body = pymunk.Body(body_type=pymunk.Body.STATIC)
+ground_shape = pymunk.Segment(ground_body, (0, 580), (800, 580), 5)
+ground_shape.friction = 0.5
+space.add(ground_body, ground_shape)
+
+# Create Bird
+def create_bird(x, y):
+    body = pymunk.Body(1, pymunk.moment_for_circle(1, 0, 20))
+    body.position = x, y
+    shape = pymunk.Circle(body, 20)
+    shape.elasticity = 0.8
+    shape.friction = 0.5
+    space.add(body, shape)
+    return body, shape
+
+bird_body, bird_shape = create_bird(150, 500)
+
+# Create Block
+def create_block(x, y):
+    body = pymunk.Body(1, pymunk.moment_for_box(1, (60, 60)))
+    body.position = x, y
+    shape = pymunk.Poly.create_box(body, (60, 60))
+    shape.elasticity = 0.4
+    shape.friction = 0.6
+    space.add(body, shape)
+    return body, shape
+
+blocks = [create_block(600, 520), create_block(660, 520), create_block(720, 520), create_block(660, 480), create_block(690, 480), create_block(680, 440)]
+
+
+# Draw function
+def draw_objects():
+    
+    screen.blit(background_image, (0, 0))  # Draw Background
+
+    # Draw Bird
+    bird_pos = bird_body.position
+    screen.blit(bird_image, (bird_pos.x - 20, bird_pos.y - 20))
+
+    # Draw Ground
+   # pygame.draw.line(screen, (0, 0, 0), (0, 580), (800, 580), 5)
+
+# Game Loop
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            bird_body.position = 150, 500
+            bird_body.velocity = ((mouse_pos[0] - 150) * 4, (mouse_pos[1] - 500) * 4)
+           
+
+    space.step(1 / 60.0)
+    draw_objects()
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
